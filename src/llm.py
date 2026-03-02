@@ -1,8 +1,11 @@
 import hashlib
 import json
+import os
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from src.config import LLM_MODEL, LLM_TEMPERATURE, LLM_MAX_TOKENS, PROMPTS_DIR, CACHE_DIR
+
+os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
 
 _tokenizer = None
 _model = None
@@ -16,6 +19,7 @@ def _load_model():
             _tokenizer.pad_token = _tokenizer.eos_token
         _model = AutoModelForCausalLM.from_pretrained(
             LLM_MODEL, dtype=torch.bfloat16, device_map="auto",
+            offload_folder="offload",
         )
     return _tokenizer, _model
 
