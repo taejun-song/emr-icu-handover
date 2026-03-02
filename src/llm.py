@@ -30,7 +30,7 @@ def _cache_key(system_prompt: str, user_content: str) -> str:
     return hashlib.sha256(combined.encode("utf-8")).hexdigest()
 
 
-async def call_llm(system_prompt: str, user_content: str) -> str:
+async def call_llm(system_prompt: str, user_content: str, max_tokens: int | None = None) -> str:
     cache_hash = _cache_key(system_prompt, user_content)
     cache_file = CACHE_DIR / f"{cache_hash}.json"
     if cache_file.exists():
@@ -47,9 +47,10 @@ async def call_llm(system_prompt: str, user_content: str) -> str:
     )
     encoded = tokenizer(text_input, return_tensors="pt").to(model.device)
     input_len = encoded["input_ids"].shape[-1]
-    print(f"  [LLM] Input: {input_len} tokens, generating up to {LLM_MAX_TOKENS} tokens...")
+    effective_max = max_tokens or LLM_MAX_TOKENS
+    print(f"  [LLM] Input: {input_len} tokens, generating up to {effective_max} tokens...")
     gen_kwargs = {
-        "max_new_tokens": LLM_MAX_TOKENS,
+        "max_new_tokens": effective_max,
         "pad_token_id": tokenizer.pad_token_id,
     }
     if LLM_TEMPERATURE > 0:
@@ -60,6 +61,8 @@ async def call_llm(system_prompt: str, user_content: str) -> str:
     output_ids = model.generate(**encoded, **gen_kwargs)
     new_tokens = output_ids[0][encoded["input_ids"].shape[-1]:]
     text = tokenizer.decode(new_tokens, skip_special_tokens=True)
+    del encoded, output_ids, new_tokens
+    torch.cuda.empty_cache()
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
     cache_file.write_text(json.dumps({"response": text}, ensure_ascii=False), encoding="utf-8")
     return text

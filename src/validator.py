@@ -10,7 +10,7 @@ async def validate(
     baseline_sheets: dict[str, pd.DataFrame],
 ) -> ValidatorOutput:
     system_prompt = load_prompt("validator.md")
-    interp_json = json.dumps(interpreter_output.model_dump(), ensure_ascii=False, indent=2)
+    interp_json = json.dumps(interpreter_output.model_dump(), ensure_ascii=False)
     baseline_parts = []
     for name, df in baseline_sheets.items():
         if not df.empty:
@@ -22,7 +22,7 @@ async def validate(
         "## Baseline Data (Day 1 Context)\n"
         f"{baseline_text}"
     )
-    raw = await call_llm(system_prompt, user_content)
+    raw = await call_llm(system_prompt, user_content, max_tokens=2048)
     data = parse_json_response(raw)
     data.setdefault("validated_findings", data.get("reconciled_findings", []))
     data.setdefault("missing_findings", [])

@@ -29,7 +29,7 @@ async def interpret(
         "## Baseline Data (Day 1 Context)\n"
         f"{baseline_text}"
     )
-    raw = await call_llm(system_prompt, user_content)
+    raw = await call_llm(system_prompt, user_content, max_tokens=2048)
     data = parse_json_response(raw)
     data.setdefault("reconciled_findings", [])
     data.setdefault("conflicts_resolved", [])
