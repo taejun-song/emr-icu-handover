@@ -18,23 +18,23 @@ def _load_model():
         if _tokenizer.pad_token is None:
             _tokenizer.pad_token = _tokenizer.eos_token
         _model = AutoModelForCausalLM.from_pretrained(
-            LLM_MODEL, dtype=torch.bfloat16, device_map="auto",
-            offload_folder="offload",
-        )
+            LLM_MODEL, dtype=torch.bfloat16,
+        ).to("cuda")
     return _tokenizer, _model
 
 
 def unload_model():
     global _tokenizer, _model
     if _model is not None:
+        _model.cpu()
         del _model
         _model = None
     _tokenizer = None
+    import gc
+    gc.collect()
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
         torch.cuda.synchronize()
-    import gc
-    gc.collect()
 
 
 def load_prompt(filename: str) -> str:
