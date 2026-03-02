@@ -43,43 +43,47 @@ async def run_pipeline(baseline_path: Path, data_path: Path, output_dir: Path) -
     from src.interpreter import interpret
     from src.validator import validate
     from src.generator import generate
+    from src.llm import unload_model
 
-    print("Loading EMR files...")
-    baseline_sheets = load_emr_file(baseline_path)
-    data_sheets = load_emr_file(data_path)
-    print(f"Baseline sheets: {list(baseline_sheets.keys())}")
-    print(f"Data sheets: {list(data_sheets.keys())}")
-    for name, df in data_sheets.items():
-        print(f"  {name}: {len(df)} rows")
+    try:
+        print("Loading EMR files...")
+        baseline_sheets = load_emr_file(baseline_path)
+        data_sheets = load_emr_file(data_path)
+        print(f"Baseline sheets: {list(baseline_sheets.keys())}")
+        print(f"Data sheets: {list(data_sheets.keys())}")
+        for name, df in data_sheets.items():
+            print(f"  {name}: {len(df)} rows")
 
-    print("\nRunning extractors...")
-    extractor_outputs = await extract_all(data_sheets)
-    extractions_dir = output_dir / "extractions"
-    extractions_dir.mkdir(parents=True, exist_ok=True)
-    for eo in extractor_outputs:
-        out_path = extractions_dir / f"{eo.sheet_name.replace(' ', '_').lower()}.json"
-        out_path.write_text(json.dumps(eo.model_dump(), ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"Extracted from {len(extractor_outputs)} sheets")
+        print("\nRunning extractors...")
+        extractor_outputs = await extract_all(data_sheets)
+        extractions_dir = output_dir / "extractions"
+        extractions_dir.mkdir(parents=True, exist_ok=True)
+        for eo in extractor_outputs:
+            out_path = extractions_dir / f"{eo.sheet_name.replace(' ', '_').lower()}.json"
+            out_path.write_text(json.dumps(eo.model_dump(), ensure_ascii=False, indent=2), encoding="utf-8")
+        print(f"Extracted from {len(extractor_outputs)} sheets")
 
-    print("\nRunning interpreter...")
-    interpreter_output = await interpret(extractor_outputs, baseline_sheets)
-    output_dir.mkdir(parents=True, exist_ok=True)
-    interp_path = output_dir / "interpretation.json"
-    interp_path.write_text(json.dumps(interpreter_output.model_dump(), ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"Reconciled findings: {len(interpreter_output.reconciled_findings)}")
+        print("\nRunning interpreter...")
+        interpreter_output = await interpret(extractor_outputs, baseline_sheets)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        interp_path = output_dir / "interpretation.json"
+        interp_path.write_text(json.dumps(interpreter_output.model_dump(), ensure_ascii=False, indent=2), encoding="utf-8")
+        print(f"Reconciled findings: {len(interpreter_output.reconciled_findings)}")
 
-    print("\nRunning validator...")
-    validator_output = await validate(interpreter_output, baseline_sheets)
-    val_path = output_dir / "validation.json"
-    val_path.write_text(json.dumps(validator_output.model_dump(), ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"Validated findings: {len(validator_output.validated_findings)}")
+        print("\nRunning validator...")
+        validator_output = await validate(interpreter_output, baseline_sheets)
+        val_path = output_dir / "validation.json"
+        val_path.write_text(json.dumps(validator_output.model_dump(), ensure_ascii=False, indent=2), encoding="utf-8")
+        print(f"Validated findings: {len(validator_output.validated_findings)}")
 
-    print("\nGenerating summary...")
-    generator_output = await generate(validator_output)
-    summary_path = output_dir / "summary.md"
-    summary_path.write_text(generator_output.summary, encoding="utf-8")
+        print("\nGenerating summary...")
+        generator_output = await generate(validator_output)
+        summary_path = output_dir / "summary.md"
+        summary_path.write_text(generator_output.summary, encoding="utf-8")
 
-    print(f"\nPipeline complete. Summary saved to: {summary_path}")
+        print(f"\nPipeline complete. Summary saved to: {summary_path}")
+    finally:
+        unload_model()
 
 
 def main() -> None:
@@ -110,9 +114,6 @@ def main() -> None:
             sys.exit(130)
         except Exception as e:
             print(f"\n[ERROR] {pid} failed: {e}", file=sys.stderr)
-        finally:
-            from src.llm import unload_model
-            unload_model()
             failed.append(pid)
             continue
         print()
