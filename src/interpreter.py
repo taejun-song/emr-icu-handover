@@ -4,7 +4,7 @@ from src.schemas import ExtractorOutput, InterpreterOutput
 from src.llm import load_prompt, call_llm, parse_json_response
 from src.loader import serialize_dataframe
 
-CHUNK_SIZE = 3
+CHUNK_SIZE = 2
 
 
 async def _interpret_chunk(
