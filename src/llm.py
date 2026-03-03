@@ -26,20 +26,13 @@ def _load_model():
 def unload_model():
     global _tokenizer, _model
     if _model is not None:
-        try:
-            from accelerate.hooks import remove_hook_from_submodules
-            remove_hook_from_submodules(_model)
-        except Exception:
-            pass
         del _model
         _model = None
     _tokenizer = None
     import gc
     gc.collect()
-    gc.collect()
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
-        torch.cuda.synchronize()
 
 
 def load_prompt(filename: str) -> str:
@@ -86,8 +79,9 @@ async def call_llm(system_prompt: str, user_content: str, max_tokens: int | None
     print(f"  [LLM] Output: {len(new_tokens)} tokens, {len(text)} chars")
     if not text.strip():
         print(f"  [LLM] WARNING: Empty output from model")
-    del encoded, output_ids, new_tokens, tokenizer, model
-    unload_model()
+    del encoded, output_ids, new_tokens
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
     cache_file.write_text(json.dumps({"response": text}, ensure_ascii=False), encoding="utf-8")
     return text
