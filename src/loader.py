@@ -11,7 +11,7 @@ EXPECTED_COLUMNS = {
     "Medication Orders": ["Datetime", "Type", "Order", "Comment"],
     "Procedure Orders": ["Datetime", "Type", "Order", "Comment"],
     "Flowsheet": ["Datetime", "SBP", "DBP", "meanBP", "HR", "RR", "BT", "SpO2", "EKG", "Memo"],
-    "Nursing Risk Assessment": ["Datetime", "Nursing Risk Asssessment", "Item", "Result", "Score"],
+    "Nursing Risk Assessment": ["Datetime", "Item", "Result", "Score"],
 }
 
 _DT_PATTERN = re.compile(r"\((\d{4}-\d{2}-\d{2}[\s\d:]*)\)")
