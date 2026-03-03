@@ -124,18 +124,10 @@ _PREFILTERS = {
 }
 
 
-async def extract_sheet(sheet_name: str, df: pd.DataFrame) -> ExtractorOutput:
-    total_rows = len(df)
-    df = _prefilter(sheet_name, df)
-    prompt_file = SHEET_NAME_TO_PROMPT[sheet_name]
-    system_prompt = load_prompt(prompt_file)
-    user_content = serialize_dataframe(df, sheet_name)
-    raw = await call_llm(system_prompt, user_content)
-    try:
-        data = parse_json_response(raw)
-    except Exception as e:
-        print(f"  [WARN] {sheet_name}: JSON parse failed ({e}), returning empty findings")
-        data = {"findings": []}
+MAX_ROWS_PER_CHUNK = 200
+
+
+def _parse_findings(data, sheet_name: str) -> list[dict]:
     if isinstance(data, list):
         data = {"findings": data}
     data.setdefault("findings", [])
@@ -147,15 +139,45 @@ async def extract_sheet(sheet_name: str, df: pd.DataFrame) -> ExtractorOutput:
             normalized.append({"datetime": dt, "content": content, "category": sheet_name})
         else:
             normalized.append(f)
-    data["findings"] = normalized
-    data["sheet_name"] = sheet_name
-    data["extraction_datetime"] = datetime.now(timezone.utc).isoformat()
-    data.setdefault("metadata", {
-        "total_source_rows": total_rows,
-        "findings_extracted": len(data["findings"]),
-        "date_range": "N/A",
+    return normalized
+
+
+async def _extract_chunk(system_prompt: str, sheet_name: str, df: pd.DataFrame) -> list[dict]:
+    user_content = serialize_dataframe(df, sheet_name)
+    raw = await call_llm(system_prompt, user_content)
+    try:
+        data = parse_json_response(raw)
+    except Exception as e:
+        print(f"  [WARN] {sheet_name}: JSON parse failed ({e}), skipping chunk")
+        return []
+    return _parse_findings(data, sheet_name)
+
+
+async def extract_sheet(sheet_name: str, df: pd.DataFrame) -> ExtractorOutput:
+    total_rows = len(df)
+    df = _prefilter(sheet_name, df)
+    prompt_file = SHEET_NAME_TO_PROMPT[sheet_name]
+    system_prompt = load_prompt(prompt_file)
+    all_findings = []
+    if len(df) > MAX_ROWS_PER_CHUNK:
+        chunks = [df.iloc[i:i + MAX_ROWS_PER_CHUNK] for i in range(0, len(df), MAX_ROWS_PER_CHUNK)]
+        print(f"    Splitting {len(df)} rows into {len(chunks)} chunks")
+        for ci, chunk in enumerate(chunks, 1):
+            print(f"    Chunk {ci}/{len(chunks)}: {len(chunk)} rows")
+            findings = await _extract_chunk(system_prompt, sheet_name, chunk)
+            all_findings.extend(findings)
+    else:
+        all_findings = await _extract_chunk(system_prompt, sheet_name, df)
+    return ExtractorOutput.model_validate({
+        "findings": all_findings,
+        "sheet_name": sheet_name,
+        "extraction_datetime": datetime.now(timezone.utc).isoformat(),
+        "metadata": {
+            "total_source_rows": total_rows,
+            "findings_extracted": len(all_findings),
+            "date_range": "N/A",
+        },
     })
-    return ExtractorOutput.model_validate(data)
 
 
 async def extract_all(data_sheets: dict[str, pd.DataFrame]) -> list[ExtractorOutput]:
