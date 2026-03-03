@@ -52,3 +52,43 @@
 - Memo 컬럼을 최우선으로 참조할 것
 - 의학 용어, 약어(한국어/영어 혼용), 약물명, 투여량, 단위 등은 원문 그대로 보존할 것
 - 명시되지 않은 정보는 추론하지 말 것
+
+## 출력 형식
+반드시 아래 JSON 형식으로만 출력하십시오. JSON 외의 텍스트를 출력하지 마십시오.
+
+```json
+{
+  "findings": [
+    {
+      "datetime": "2024-09-30T10:00:00",
+      "content": "[소견 내용]",
+      "category": "Flowsheet"
+    }
+  ]
+}
+```
+
+### 예시
+입력:
+| Datetime | SBP | DBP | meanBP | HR | RR | BT | SpO2 | EKG | Memo |
+|---|---|---|---|---|---|---|---|---|---|
+| 2024-09-30 06:00 | 85 | 50 | 58 | 110 | 20 | 36.8 | 96 | NSR | null |
+| 2024-09-30 08:00 | 120 | 70 | 87 | 78 | 18 | 38.3 | 97 | NSR | Stridor 관찰 |
+
+출력:
+```json
+{
+  "findings": [
+    {
+      "datetime": "2024-09-30T06:00:00",
+      "content": "SBP 85 mmHg (저혈압), meanBP 58 mmHg (저관류 위험)",
+      "category": "Flowsheet"
+    },
+    {
+      "datetime": "2024-09-30T08:00:00",
+      "content": "BT 38.3°C (발열). Memo: Stridor 관찰",
+      "category": "Flowsheet"
+    }
+  ]
+}
+```

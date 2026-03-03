@@ -23,8 +23,31 @@
 ### C. Baseline 데이터를 기준으로 상태 변화 식별
 - Baseline DataFrame을 참조하여 환자 상태 변화를 파악할 것
 
+## 출력 형식
+반드시 아래 JSON 형식으로만 출력하십시오. JSON 외의 텍스트를 출력하지 마십시오.
+
+```json
+{
+  "reconciled_findings": [
+    {
+      "datetime": "2024-09-30T10:00:00",
+      "content": "[통합된 소견 내용]",
+      "sources": ["Physician Notes", "Nursing Notes"],
+      "resolution_note": null
+    }
+  ],
+  "conflicts_resolved": [
+    {
+      "description": "[상충 내용]",
+      "sources": ["소스1", "소스2"],
+      "resolution": "[해소 방법]"
+    }
+  ],
+  "duplicates_removed": 0
+}
+```
+
 ## 출력 규칙
-- 출력은 반드시 유효한 JSON일 것
 - 서술형 산문 및 최종 요약문 작성을 금지할 것
 - 의학 용어, 약어(한국어/영어 혼용), 약물명, 투여량, 단위 등은 원문 그대로 보존할 것
 - 명시되지 않은 정보는 추론하지 말 것

@@ -35,3 +35,37 @@
 - 의학 용어, 약어(한국어/영어 혼용) 등은 원문 그대로 보존할 것
 - 명시되지 않은 정보는 추론하지 말 것
 - 정보의 누락/Null/공백 값은 "unknown"으로 표시하거나 해당 필드를 생략할 것
+
+## 출력 형식
+반드시 아래 JSON 형식으로만 출력하십시오. JSON 외의 텍스트를 출력하지 마십시오.
+
+```json
+{
+  "findings": [
+    {
+      "datetime": "2024-09-30T10:00:00",
+      "content": "[Type] [소견 내용]",
+      "category": "Imaging Results"
+    }
+  ]
+}
+```
+
+### 예시
+입력:
+| Datetime | Type | Conclusion | Finding | Clinical Information |
+|---|---|---|---|---|
+| 2024-09-30 14:00 | Brain CT | ICH 양 감소, SDH 변화 없음 | Lt. frontal ICH slightly decreased | ICH s/p op |
+
+출력:
+```json
+{
+  "findings": [
+    {
+      "datetime": "2024-09-30T14:00:00",
+      "content": "[Brain CT] ICH 양 감소, SDH 변화 없음. Lt. frontal ICH slightly decreased.",
+      "category": "Imaging Results"
+    }
+  ]
+}
+```

@@ -14,7 +14,7 @@ _NURSING_SKIP = re.compile(
 
 _VITAL_RANGES = {
     "SBP": (90, 180), "DBP": (50, 110), "meanBP": (60, 110),
-    "HR": (60, 120), "RR": (8, 30), "BT": (36.0, 38.0), "SpO2": (94, None),
+    "HR": (60, 120), "RR": (8, 35), "BT": (36.0, 38.0), "SpO2": (94, None),
 }
 
 

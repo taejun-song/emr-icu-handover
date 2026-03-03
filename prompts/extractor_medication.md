@@ -37,3 +37,43 @@
 - 변경/중단/보류/교체를 의미하는 키워드가 있다면 우선적으로 추출할 것
 - 의학 용어, 약어(한국어/영어 혼용), 약물명, 투여량, 단위 등은 원문 그대로 보존할 것
 - 명시되지 않은 정보는 추론하지 말 것
+
+## 출력 형식
+반드시 아래 JSON 형식으로만 출력하십시오. JSON 외의 텍스트를 출력하지 마십시오.
+
+```json
+{
+  "findings": [
+    {
+      "datetime": "2024-09-30T10:00:00",
+      "content": "[소견 내용]",
+      "category": "Medication Orders"
+    }
+  ]
+}
+```
+
+### 예시
+입력:
+| Datetime | Type | Order | Comment |
+|---|---|---|---|
+| 2024-09-30 09:00 | 신규처방 | Ceftriaxone 2g IV q24h | 폐렴 의증 |
+| 2024-09-30 10:00 | 중단 | Remifentanil 중단 | 발관 후 |
+
+출력:
+```json
+{
+  "findings": [
+    {
+      "datetime": "2024-09-30T09:00:00",
+      "content": "신규처방: Ceftriaxone 2g IV q24h (폐렴 의증)",
+      "category": "Medication Orders"
+    },
+    {
+      "datetime": "2024-09-30T10:00:00",
+      "content": "중단: Remifentanil 중단 (발관 후)",
+      "category": "Medication Orders"
+    }
+  ]
+}
+```

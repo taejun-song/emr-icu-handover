@@ -53,8 +53,48 @@
 - 임상적으로 의미 없는 경미한 변동인 경우
 
 ## 추출 규칙
-- 출력 시 [Test Item]을 접두어로 붙여 출처를 명확하게 기술할 것 (Ex. [Glucose] 400mg/dL
-)
+- 출력 시 [Test Item]을 접두어로 붙여 출처를 명확하게 기술할 것 (Ex. [Glucose] 400mg/dL)
 - [Result] 숫자 반올림하지 말 것
 - 의학 용어, 약어(한국어/영어 혼용) 등은 원문 그대로 보존할 것
 - 명시되지 않은 정보는 추론하지 말고 판정 중심으로 추출할 것
+
+## 출력 형식
+반드시 아래 JSON 형식으로만 출력하십시오. JSON 외의 텍스트를 출력하지 마십시오.
+
+```json
+{
+  "findings": [
+    {
+      "datetime": "2024-09-30T06:00:00",
+      "content": "[Test Item] Result (참고범위), 판정",
+      "category": "Laboratory Test Results"
+    }
+  ]
+}
+```
+
+### 예시
+입력:
+| Datetime | Test | Specimen | Test Item | Result | Reference Range |
+|---|---|---|---|---|---|
+| 2024-09-30 06:00 | CBC | Blood | WBC | 15.02 | 4.0 ~ 10.0 |
+| 2024-09-30 06:00 | Chemistry | Blood | K | 3.1 | 3.5 ~ 5.0 |
+| 2024-09-30 06:00 | Chemistry | Blood | Na | 140 | 135 ~ 145 |
+
+출력:
+```json
+{
+  "findings": [
+    {
+      "datetime": "2024-09-30T06:00:00",
+      "content": "[WBC] 15.02 (참고범위 4.0~10.0), lab_abnormal",
+      "category": "Laboratory Test Results"
+    },
+    {
+      "datetime": "2024-09-30T06:00:00",
+      "content": "[K] 3.1 mEq/L (참고범위 3.5~5.0), lab_abnormal — 저칼륨혈증",
+      "category": "Laboratory Test Results"
+    }
+  ]
+}
+```

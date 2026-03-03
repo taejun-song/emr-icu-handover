@@ -31,3 +31,39 @@
 - 총점 행은 `Item=null` 여부로 식별할 것
 - 의학 용어, 약어(한국어/영어 혼용), 약물명, 투여량, 단위 등은 원문 그대로 보존할 것
 - 명시되지 않은 정보는 추론하지 말 것
+
+## 출력 형식
+반드시 아래 JSON 형식으로만 출력하십시오. JSON 외의 텍스트를 출력하지 마십시오.
+
+```json
+{
+  "findings": [
+    {
+      "datetime": "2024-09-30T08:00:00",
+      "content": "[소견 내용]",
+      "category": "Nursing Risk Assessment"
+    }
+  ]
+}
+```
+
+### 예시
+입력:
+| Datetime | Nursing Risk Assessment | Item | Result | Score |
+|---|---|---|---|---|
+| 2024-09-29 08:00 | Braden Scale | null | null | 12 |
+| 2024-09-30 08:00 | Braden Scale | Mobility | Slightly Limited | 3 |
+| 2024-09-30 08:00 | Braden Scale | null | null | 13 |
+
+출력:
+```json
+{
+  "findings": [
+    {
+      "datetime": "2024-09-30T08:00:00",
+      "content": "Braden Scale 총점 12→13 (1점 상승). Mobility: Slightly Limited (3점).",
+      "category": "Nursing Risk Assessment"
+    }
+  ]
+}
+```

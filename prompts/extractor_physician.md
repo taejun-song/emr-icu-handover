@@ -34,4 +34,38 @@
 - Finding 컬럼을 최우선으로 참조할 것
 - 의학 용어, 약어(한국어/영어 혼용), 약물명, 투여량, 단위 등은 원문 그대로 보존할 것
 - 명시되지 않은 정보는 추론하지 말 것
-- 정보의 누락/Null/공백 값은 “unknown”으로 표시하거나 해당 필드를 생략할 것
+- 정보의 누락/Null/공백 값은 "unknown"으로 표시하거나 해당 필드를 생략할 것
+
+## 출력 형식
+반드시 아래 JSON 형식으로만 출력하십시오. JSON 외의 텍스트를 출력하지 마십시오.
+
+```json
+{
+  "findings": [
+    {
+      "datetime": "2024-09-30T10:00:00",
+      "content": "[소견 내용]",
+      "category": "Physician Notes"
+    }
+  ]
+}
+```
+
+### 예시
+입력:
+| Datetime | Type | Finding | Assessment | Plan | Consultation |
+|---|---|---|---|---|---|
+| 2024-09-30 10:00 | 경과기록 | Lt. motor Gr III→IV 호전. | ICH s/p EVD removal | Extubation 시도 예정 | null |
+
+출력:
+```json
+{
+  "findings": [
+    {
+      "datetime": "2024-09-30T10:00:00",
+      "content": "Lt. motor Gr III→IV 호전. ICH s/p EVD removal. Extubation 시도 예정.",
+      "category": "Physician Notes"
+    }
+  ]
+}
+```
