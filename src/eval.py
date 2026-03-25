@@ -105,6 +105,24 @@ def aggregate_by_framework(
     return grouped.reset_index().rename(columns={"level_1": "framework"})
 
 
+def aggregate_by_level2(
+    df: pd.DataFrame, metric_cols: list[str],
+) -> pd.DataFrame:
+    from src.alignment import LEVEL_2_HEADERS, LEVEL_2_TO_LEVEL_1
+    agg_dict = {col: "mean" for col in metric_cols}
+    agg_dict[metric_cols[0]] = ["count", "mean"]
+    grouped = df.groupby("level_2").agg(agg_dict)
+    grouped.columns = [
+        "count" if stat == "count" else f"{col}_mean"
+        for col, stat in grouped.columns
+    ]
+    grouped = grouped.reindex(
+        [h for h in LEVEL_2_HEADERS if h in grouped.index],
+    )
+    grouped.insert(0, "level_1", grouped.index.map(LEVEL_2_TO_LEVEL_1))
+    return grouped.reset_index()
+
+
 def aggregate_overall(
     df: pd.DataFrame, metric_cols: list[str],
 ) -> dict:
@@ -129,6 +147,7 @@ def save_results(
     output_dir: str | Path,
     config: dict | None = None,
     framework_agg: pd.DataFrame | None = None,
+    level2_agg: pd.DataFrame | None = None,
 ) -> Path:
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -163,5 +182,11 @@ def save_results(
         )
         lines.append("\n## Per-Framework Aggregation\n")
         lines.append(framework_agg.to_markdown(index=False))
+    if level2_agg is not None:
+        level2_agg.to_csv(
+            output_dir / "results_by_level2.csv", index=False, encoding="utf-8-sig",
+        )
+        lines.append("\n## Per-Level 2 Aggregation\n")
+        lines.append(level2_agg.to_markdown(index=False))
     (output_dir / "report.md").write_text("\n".join(lines), encoding="utf-8")
     return output_dir
